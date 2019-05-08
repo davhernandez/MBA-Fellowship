@@ -3,54 +3,155 @@ library(sp)
 library(rgeos)
 library(rgdal)
 library(tmap)
-library(readxl) #package to read Excel's xls files
-library(leaflet)
 library(stringr)
 library(ggplot2)
-library(mapview)
+library(dplyr)
+library(readxl)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
 
-# create a list of all files in the directory
-list_filenames<-list.files(path = "data", pattern="SeaOtterCensus") # use the pattern argument to define a common pattern for import files with regex
-
-
-load_shapefiles <- function(file_name){
-  partial_year <- str_sub(file_name, start = 9, end = 10)   #grabs the last two digits of the year for the current file
-  #sf:::as_Spatial(
-    st_read(
-      dsn = sprintf("data/%s", file_name),
-      layer = sprintf("Census_sum_%s", partial_year),
-      quiet = TRUE) #keeps it from printing file info in the console
-    #) #sf:::as_Spatial will make the object an S4 SpatialPolygonDataFrame like readOGR would. Otherwise the output is an S3 polygon
+#otter counts -------------------------------------------
+#grab all of the individual Range_counts.xls files and make a big dataframe
+otter_counts <- data.frame()
+for(i in 1985:2014){
+  if(i == 2011){
+    #skip 2011 b/c the data doesn't exist
+  } else {
+    otter_counts <- rbind(otter_counts, read_xls(path = paste("data/Otter Data/Spring",i,"_SeaOtterCensus/Range_counts.xls", sep = ""), sheet = 1))
+  }
 }
 
-list_data <- lapply(list_filenames, function(x) load_shapefiles(x)) #import data
+#summarize population size by year
+otter_counts <- otter_counts %>%
+  group_by(Year) %>%
+  summarize("Otter Population Size" = sum(Count))
+
+#Crab data ----------------------------------------------------------
+
+#otter data is 1985-2014
+#proportional change in crab landings
+
+#import port data
+port_landings <- readRDS("data/Crab Cleaned/Landings Weight by Port")
+#select monterey and 1984-2017
+port_landings$Date <- as.numeric(format(port_landings$Date, "%Y"))
+port_landings <- port_landings %>%
+  filter(Location == c("Monterey", "Morro_Bay"), Date >= 1984, Date <= 2017)%>%
+  group_by(Date) %>%
+  summarise(lbs = sum(lbs)) %>%
+  mutate("Proportional Change" = NA)
+#loop to calculate the amount landed (this year - last year) / last year
+for(i in 2:nrow(port_landings)){
+  port_landings$`Proportional Change`[i] <- (port_landings$lbs[i] - port_landings$lbs[(i-1)])/port_landings$lbs[(i-1)]
+}
+
+#merge by year
+proportional <- merge(y = port_landings, x = otter_counts, by.y = "Date", by.x = "Year")
+
+ggplot(proportional, aes(x = `Otter Population Size`, y = `Proportional Change`)) +
+  geom_point() +
+  theme_classic() +
+  xlab("Otter Population") +
+  ylab("Proportional Change in Landings") +
+  ggtitle("Otter Population vs Yearly Change in Landings")
+
+#add regional data into the mix
+regional <- readRDS("data/Crab Cleaned/Regional Data")
+central <- regional %>%
+  filter(Region == "Central", Year >= 1984, Year <= 2017) %>%
+  group_by(Year, Region) %>%
+  summarise(lbs = sum(lbs)) %>%
+  mutate("Proportional Change" = NA)
+statewide <- regional %>%
+  filter(Region == "Statewide", Year >= 1984, Year <= 2017) %>%
+  group_by(Year, Region) %>%
+  summarise(lbs = sum(lbs)) %>%
+  mutate("Proportional Change" = NA)
+for(i in 2:nrow(central)){
+  central$`Proportional Change`[i] <- (central$lbs[i] - central$lbs[(i-1)])/central$lbs[(i-1)]
+}
+for(i in 2:nrow(statewide)){
+  statewide$`Proportional Change`[i] <- (statewide$lbs[i] - statewide$lbs[(i-1)])/statewide$lbs[(i-1)]
+}
+
+port_landings$Region <- rep("Monterey", times = nrow(port_landings))
+port_landings <- port_landings[,c(1,4,2,3)] #reorder columns to match regional dfs
+colnames(port_landings)[1] <- "Year"
+overall_proportional <- bind_rows(central, statewide, port_landings) #`bind_rows` instead of `rbind` because of tbls
 
 
-names(list_data)<-list_filenames # add the names of your data to the list
+ggplot(overall_proportional, aes(x = Year, y = `Proportional Change`, color = Region)) +
+  geom_line() +
+  theme_classic() +
+  ylab("Proportional Change in Landings") +
+  ggtitle("Regional Change in Yearly Landings")
 
-# now you can index one of your tables like this
-#list.data$Spring1985_SeaOtterCensus
+# Otter population vs crab landings
+merge(otter_counts, port_landings) %>%
+  mutate(tons = lbs * 0.0004535924) %>%
+  ggplot(aes(x = `Otter Population Size`, y = tons)) +
+  geom_point() +
+  xlab("Otter Population") +
+  ylab("Landings (metric tons)") +
+  ggtitle("Otter Population vs Monterey Area Landings") +
+  theme_classic()
 
-#port GPS -----------------
-port_GPS <- data.frame(longitude = -120.8499924, latitude = 35.3659445) #input GPS points
+#plot landings in metric ton for Monterey area and SF
+readRDS("data/Crab Cleaned/Landings Weight by Port") %>%
+  mutate(Date = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay")) %>%
+  group_by(Location, Date) %>%
+  summarise(lbs = sum(lbs)) %>%
+  mutate(tons = lbs * 0.0004535924) %>% #convert to metric tons
+  ggplot(aes(x = Date, y = tons, color = Location)) +
+  geom_point(show.legend = FALSE) +
+  geom_line(show.legend = FALSE) +
+  facet_grid(vars(Location), scales = "free", labeller = as_labeller(c("Monterey" = "Monterey",
+                                                                       "Morro_Bay" = "Morro Bay",
+                                                                       "Halfmoon_Bay" = "Halfmoon Bay",
+                                                                       "San_Francisco" = "San Francisco",
+                                                                       "Bodega_Bay" = "Bodega Bay"))) +
+  ylab("Landings (metric tons)") +
+  xlab("Year") +
+  ggtitle("Yearly Dungeness Crab Landings") +
+  theme_bw()
 
-port_points <- st_as_sf(x = port_GPS, coords = c("longitude", "latitude"), crs = "+proj=longlat +datum=WGS84 +no_defs") #convert GPS to projected geometry
-  
-mapview(port_points)
+#effort (lbs per ticket)
 
-tm_shape(list_data$Spring1985_SeaOtterCensus) +
-  tm_borders(alpha = 0.4) +
-  tm_fill(col = "dens_sm", palette = 'YlGnBu', style = 'sd') +
-tm_shape(port_points) +
-  tm_dots(col = "red", size = 1)
+readRDS("data/Crab Cleaned/Effort by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1984, Year <= 2017) %>%
+  group_by(Location, Year) %>%
+  summarise(tons = sum(Effort) * 0.0004535924) %>% #metric tons per receipt
+  filter(Year != 1997) %>%
+  ggplot(aes(x = Year, y = tons, color = Location)) +
+  geom_point(show.legend = FALSE) +
+  geom_line(show.legend = FALSE) +
+  facet_grid(vars(Location), scales = "free", labeller = as_labeller(c("Monterey" = "Monterey",
+                                                                       "Morro_Bay" = "Morro Bay",
+                                                                       "Halfmoon_Bay" = "Halfmoon Bay",
+                                                                       "San_Francisco" = "San Francisco",
+                                                                       "Bodega_Bay" = "Bodega Bay"))) +
+  ylab("Landings per Receipt (metric tons)") +
+  xlab("Year") +
+  ggtitle("Yearly Landings per Receipt (Outliers Trimmed)") +
+  theme_bw()
 
-#buffer around GPS --------------------------------
+readRDS("data/Crab Cleaned/Effort by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1984, Year <= 2017) %>%
+  group_by(Location, Year) %>%
+  summarise(receipts = sum(receipts)) %>% #metric tons per receipt
+  ggplot(aes(x = Year, y = receipts, color = Location)) +
+  geom_point(show.legend = FALSE) +
+  geom_line(show.legend = FALSE) +
+  facet_grid(vars(Location), scales = "free", labeller = as_labeller(c("Monterey" = "Monterey",
+                                                                       "Morro_Bay" = "Morro Bay",
+                                                                       "Halfmoon_Bay" = "Halfmoon Bay",
+                                                                       "San_Francisco" = "San Francisco",
+                                                                       "Bodega_Bay" = "Bodega Bay"))) +
+  ylab("Landings Receipts") +
+  xlab("Year") +
+  ggtitle("Yearly Landings Receipts") +
+  theme_bw()
 
-boop <- gBuffer(list_data$Spring1985_SeaOtterCensus, width = 20, byid= TRUE)
-plot(boop)
-
-port_spatial <- SpatialPoints(port_GPS, proj4string = CRS("+proj=longlat +datum=WGS84 +no_defs"))
-port_spatial <- spTransform(port_spatial, CRSobj = "+proj=longlat +datum=WGS84 +no_defs")
-gBuffer(port_spatial)
