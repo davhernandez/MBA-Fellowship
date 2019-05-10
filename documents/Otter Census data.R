@@ -99,7 +99,7 @@ merge(otter_counts, port_landings) %>%
 #plot landings in metric ton for Monterey area and SF
 readRDS("data/Crab Cleaned/Landings Weight by Port") %>%
   mutate(Date = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay")) %>%
+  #filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay")) %>%
   group_by(Location, Date) %>%
   summarise(lbs = sum(lbs)) %>%
   mutate(tons = lbs * 0.0004535924) %>% #convert to metric tons
@@ -110,7 +110,28 @@ readRDS("data/Crab Cleaned/Landings Weight by Port") %>%
                                                                        "Morro_Bay" = "Morro Bay",
                                                                        "Halfmoon_Bay" = "Halfmoon Bay",
                                                                        "San_Francisco" = "San Francisco",
-                                                                       "Bodega_Bay" = "Bodega Bay"))) +
+                                                                       "Bodega_Bay" = "Bodega Bay",
+                                                                       "Fort_Bragg" = "Fort Bragg",
+                                                                       "Eureka" = "Eureka",
+                                                                       "Trinidad" = "Trinidad",
+                                                                       "Cresent_City" = "Cresent City"))) +
+  ylab("Landings (metric tons)") +
+  xlab("Year") +
+  ggtitle("Yearly Dungeness Crab Landings") +
+  theme_bw()
+
+#plot landings in metric ton as box plots
+readRDS("data/Crab Cleaned/Landings Weight by Port") %>%
+  mutate(Date = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(lbs > 0) %>%
+  mutate(tons = lbs * 0.0004535924) %>% #convert to metric tons
+  ggplot(aes(x = Date, y = tons, color = Location, group = Date)) +
+  geom_boxplot(outlier.shape = NA) +
+  facet_grid(vars(Location), scales = "free") + #labeller = as_labeller(c("Monterey" = "Monterey",
+  #"Morro_Bay" = "Morro Bay",
+  #"Halfmoon_Bay" = "Halfmoon Bay",
+  #"San_Francisco" = "San Francisco",
+  #"Bodega_Bay" = "Bodega Bay"))) +
   ylab("Landings (metric tons)") +
   xlab("Year") +
   ggtitle("Yearly Dungeness Crab Landings") +
