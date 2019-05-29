@@ -156,7 +156,7 @@ buffered_morro <-left_join(buffered_morro, otter_individuals, by = c("Year", "AT
 
 ggplot() +
   geom_sf(data = buffered_morro, aes(fill = mean_otters),lwd = 0) + #remove the border line
-  geom_sf(data = morro_bay_st, fill = 'red', size = 20) +
+  geom_sf(data = morro_bay_st, col = 'red', size = 20) +
   scale_fill_viridis_c(option = "magma",begin = 0.1, name = "Otters") +
   #scale_shape_discrete(name = NULL, values = c("A" =  "red")) +
   theme_bw() +
