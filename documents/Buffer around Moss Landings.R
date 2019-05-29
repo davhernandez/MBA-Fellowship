@@ -51,7 +51,7 @@ port_buffering <- function(ports, ocean, distance){
 #do it to all ports and spit out a list.
 #Each entry is a port containing all sea otter info for all years
 #units for projection are in meters, so `distance =` units are meters
-surrounding_port <- port_buffering(ports = monterey_bay_st, ocean = SeaOtter_df, distance = 50000)
+surrounding_port <- port_buffering(ports = monterey_bay_st, ocean = SeaOtter_df, distance = 100 * 1000)
 
 #add a column with the port name
 #port names
@@ -137,7 +137,7 @@ ggplot(everything, aes(fill = mean_otters)) +
 
 rm(list = "everything") #try to save memory
 
-#50km around Morro Bay -------------------------------------------------
+#100km around Morro Bay -------------------------------------------------
 
 morro_bay_GPS <- data.frame(rbind(c(-120.87, 35.40))) #Morro Bay GPS
 colnames(morro_bay_GPS) <- c("lon", "lat") #name the columns of the df so that 'st_as_sf' can use column names
@@ -148,7 +148,7 @@ morro_bay_st <- st_transform(morro_bay_st, 3310) #assign crs to
 
 buffered_morro <- do.call(rbind.data.frame,
                           port_buffering(morro_bay_st, SeaOtter_df,
-                                         distance = (50 * 1000)))
+                                         distance = (100 * 1000)))
 
 buffered_morro <-left_join(buffered_morro, otter_individuals, by = c("Year", "ATOS_ID")) %>%
   group_by(ATOS_ID) %>%
@@ -162,7 +162,7 @@ ggplot() +
   theme_bw() +
   ggtitle("Mean Number of Otters within 50km of Morro Bay (1985-2018)")
 
-#50km around Halfmoon Bay -----------------------------------------------------
+#100km around Halfmoon Bay -----------------------------------------------------
 
 halfmoon_bay_GPS <- data.frame(rbind(c(-122.47, 37.49))) #Morro Bay GPS
 colnames(halfmoon_bay_GPS) <- c("lon", "lat") #name the columns of the df so that 'st_as_sf' can use column names
@@ -173,7 +173,7 @@ halfmoon_bay_st <- st_transform(halfmoon_bay_st, 3310) #assign crs to
 
 buffered_halfmoon <- do.call(rbind.data.frame,
                           port_buffering(halfmoon_bay_st, SeaOtter_df,
-                                         distance = (50 * 1000)))
+                                         distance = (100 * 1000)))
 
 buffered_halfmoon <-left_join(buffered_halfmoon, otter_individuals, by = c("Year", "ATOS_ID")) %>%
   group_by(ATOS_ID) %>%
@@ -186,3 +186,6 @@ ggplot() +
   #scale_shape_discrete(name = NULL, values = c("A" =  "red")) +
   theme_bw() +
   ggtitle("Mean Number of Otters within 50km of Halfmoon Bay (1985-2018)")
+
+#100km around Monterey -----------------------------------
+
