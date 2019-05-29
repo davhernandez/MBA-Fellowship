@@ -352,4 +352,6 @@ grid.arrange(arrangeGrob(p1,p2,p3,p4,p5,p6,p7,p8,p9,
 #CPUE at Halfmoon Bay, Monterey & Morro Bay vs. Otter population within 100km of the ports
 #match the colors with the colors from Pub plot 2
 
-#this plot is done in `Buffer around Moss Landing.R` since the buffering process is a long script
+#this plot is done in `Pub plot 3.R`` since the buffering process is a long script
+
+#Pub plot 4: Timeline of mgmt changes ---------------------------------------------
