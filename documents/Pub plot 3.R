@@ -11,6 +11,7 @@ library(stringr)
 library(ggplot2)
 library(dplyr)
 library(readxl)
+library(gridExtra)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
 
@@ -58,10 +59,14 @@ port_buffering <- function(ports, ocean, distance){
   return(subset_list)
 }
 
+#buffer range --------------------------------------
+#set the range (in km) around the ports that you want to buffer
+buffer_range <- 100
+
 
 #100km around Monterey  ----------------------------------------------------------------------------------
 #import or manually enter the gps coordinates for all of the fishing ports
-monterey_bay_GPS <- data.frame(rbind(c(-121.79, 36.81))) #using Elkhorn Slough/Moss Landings as the actual GPS point because they are likely rolled into the same area. Moss Landings is more of a commerical fishing port anyways
+monterey_bay_GPS <- data.frame(rbind(c(-121.80, 36.60)))
 colnames(monterey_bay_GPS) <- c("lon", "lat") #name the columns of the df so that 'st_as_sf' can use column names
 monterey_bay_st <- st_as_sf(monterey_bay_GPS, coords = c("lon", "lat")) #make the df into a point object with multiple entries
 
@@ -71,23 +76,28 @@ monterey_bay_st <- st_transform(monterey_bay_st, 3310) #assign crs to
 
 buffered_monterey <- do.call(rbind.data.frame,
                                               port_buffering(monterey_bay_st, SeaOtter_df,
-                                                             distance = 100 * 1000))
-
+                                                             distance = buffer_range * 1000))
+#pull out only ATOS_IDs that are in the buffer zone
 buffered_monterey <- otter_individuals[which(otter_individuals$ATOS_ID %in% unique(buffered_monterey$ATOS_ID)),] %>%
   group_by(Year) %>%
   summarise(Otters = sum(Count))
 
-readRDS("data/Crab Cleaned/Effort by Port") %>%
+#scatter plot of otter pop vs CPUE
+scatter1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Monterey") %>%
   group_by(Year) %>%
   summarise(CPUE = mean(Effort) * 0.0004535924) %>%
+  mutate(Location = "Monterey") %>%
   merge(.,buffered_monterey, by = "Year") %>%
   ggplot(aes(x = Otters, y = CPUE)) +
-  geom_point(color = "#B8DE29FF") +
-  ggtitle("Otters within 100km of Elkhorn Slough") +
+  geom_point(color = "#fc8d62") +
   ylab("Metric Tons per Landing Receipt") +
-  theme_classic()
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+  #facet_grid(vars(Location))
 
 #in case Kyle asks for a boxplot version
 #readRDS("data/Crab Cleaned/Effort by Port") %>%
@@ -112,23 +122,28 @@ morro_bay_st <- st_transform(morro_bay_st, 3310) #assign crs to
 
 buffered_morro <- do.call(rbind.data.frame,
                           port_buffering(morro_bay_st, SeaOtter_df,
-                                         distance = (100 * 1000)))
-
+                                         distance = (buffer_range * 1000)))
+#pull out only ATOS_IDs that are in the buffer zone
 buffered_morro <-otter_individuals[which(otter_individuals$ATOS_ID %in% unique(buffered_morro$ATOS_ID)),] %>%
   group_by(Year) %>%
   summarise(Otters = sum(Count))
 
-readRDS("data/Crab Cleaned/Effort by Port") %>%
+#scatter plot of otter popualtion size vs CPUE
+scatter2 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay") %>%
   group_by(Year) %>%
   summarise(CPUE = mean(Effort) * 0.0004535924) %>%
+  mutate(Location = "Morro Bay") %>%
   merge(.,buffered_morro, by = "Year") %>%
   ggplot(aes(x = Otters, y = CPUE)) +
-  geom_point(color = "#DCE319FF") +
-  ggtitle("Otters within 100km of Morro Bay") +
+  geom_point(color = "#fc8d62") +
   ylab("Metric Tons per Landing Receipt") +
-  theme_classic()
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+  #facet_grid(vars(Location))
 
 #100km around Halfmoon Bay -----------------------------------------------------
 
@@ -141,20 +156,35 @@ halfmoon_bay_st <- st_transform(halfmoon_bay_st, 3310) #assign crs to
 
 buffered_halfmoon <- do.call(rbind.data.frame,
                              port_buffering(halfmoon_bay_st, SeaOtter_df,
-                                            distance = (100 * 1000)))
-
+                                            distance = (buffer_range * 1000)))
+#pull out only ATOS_IDs that are in the buffer zone
 buffered_halfmoon <-otter_individuals[which(otter_individuals$ATOS_ID %in% unique(buffered_halfmoon$ATOS_ID)),] %>%
   group_by(Year) %>%
   summarise(Otters = sum(Count))
 
-readRDS("data/Crab Cleaned/Effort by Port") %>%
+#scatterplot of otter population size 
+scatter3 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Halfmoon_Bay") %>%
   group_by(Year) %>%
   summarise(CPUE = mean(Effort) * 0.0004535924) %>%
+  mutate(Location = "Halfmoon Bay") %>%
   merge(.,buffered_halfmoon, by = "Year") %>%
   ggplot(aes(x = Otters, y = CPUE)) +
-  geom_point(color = "#95D840FF") +
-  ggtitle("Otters within 100km of Elkhorn Slough") +
+  geom_point(color = "#fc8d62") +
   ylab("Metric Tons per Landing Receipt") +
-  theme_classic()
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+  #facet_grid(vars(Location))
+
+#Composite plot -------------------------------------------
+
+grid.arrange(arrangeGrob(scatter2, scatter1, scatter3,
+             ncol = 1,
+             left = "Metric Tons per Offload Receipt",
+             bottom = "Otter Population Size",
+             top = "Otter Population Size vs CPUE")
+             )
+
