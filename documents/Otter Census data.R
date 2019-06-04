@@ -8,6 +8,8 @@ library(ggplot2)
 library(dplyr)
 library(readxl)
 library(gridExtra)
+library(lemon)
+library(tidyverse)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
 
@@ -181,6 +183,9 @@ readRDS("data/Crab Cleaned/Effort by Port") %>%
 
 #Pub plot 1: CPUE regression ---------------------------------------------------
 
+#vector which allows manually setting colors for plot 1
+set_colors <- c(Cresent_City = "#8da0cb", Trinidad = "#8da0cb", Eureka = "#8da0cb", Fort_Bragg = "#8da0cb", Bodega_Bay = "#8da0cb", San_Francisco = "#8da0cb", Halfmoon_Bay = "#fc8d62", Monterey = "#fc8d62", Morro_Bay = "#fc8d62")
+
 #regression for CPUE over time
 readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
@@ -190,8 +195,9 @@ readRDS("data/Crab Cleaned/Effort by Port") %>%
   filter(Year != 1997) %>% #remove the outlier year
   ggplot(aes(x = Year, y = CPUE, color = Location)) +
   geom_smooth(se = FALSE) +
+  scale_color_manual(values = set_colors) +
   theme_classic() +
-  ggtitle("CPUE by port (tons per landing receipt)")
+  ggtitle("Metric tons per offload receipt")
   
   #MAYBE not useful
   #regression of just the southern ports
@@ -217,135 +223,169 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   filter(Year >= 1984, Year <= 2017, Location == "Cresent_City") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#1F968BFF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
-  theme(axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("Cresent_City" = "Cresent City")))
+  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("Cresent_City" = "Cresent City")))
 
 p2 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Trinidad") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#20A387FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location))
 
 p3 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Eureka") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#29AF7FFF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location))
 
 p4 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Fort_Bragg") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#3CBB75FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("Fort_Bragg" = "Fort Bragg")))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("Fort_Bragg" = "Fort Bragg")))
 
 p5 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Bodega_Bay") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#55C667FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("Bodega_Bay" = "Bodega Bay")))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("Bodega_Bay" = "Bodega Bay")))
 
 p6 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "San_Francisco") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#73D055FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#8da0cb") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("San_Francisco" = "San Francisco")))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("San_Francisco" = "San Francisco")))
 
 p7 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Halfmoon_Bay") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#95D840FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#fc8d62") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("Halfmoon_Bay" = "Halfmoon Bay")))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("Halfmoon_Bay" = "Halfmoon Bay")))
 
 p8 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Monterey") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#B8DE29FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#fc8d62") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.ticks.x = element_blank(),
-        axis.title.y = element_blank()) +
-  facet_grid(vars(Location))
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location))
 
 p9 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
   filter(Year >= 1984, Year <= 2017, Location == "Morro_Bay") %>%
   #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE, group = Year)) +
-  geom_boxplot(outlier.shape = NA, fill = "#DCE319FF") +
+  geom_boxplot(outlier.shape = NA, fill = "#fc8d62") +
   coord_cartesian(ylim = c(0,3.5)) +
   theme_bw() +
-  theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
-  facet_grid(vars(Location), labeller = as_labeller(c("Morro_Bay" = "Morro Bay")))
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.title.y = element_blank()) 
+  #facet_grid(vars(Location), labeller = as_labeller(c("Morro_Bay" = "Morro Bay")))
 
 #combine all the plots into one massive plot
-grid.arrange(arrangeGrob(p1,p2,p3,p4,p5,p6,p7,p8,p9,
+grid.arrange(arrangeGrob(p9,p8,p7,p6,p5,p4,p3,p2,p1,
              ncol = 1,
-             left = "Metric Tons per Landing Receipt",
+             left = "Metric Tons per Offload Receipt",
              bottom = "Year",
              top = "CPUE")
 )
 
 
+# Pub plot 2: CPUE by port Sarah's way ---------------------------------------------
+
+theme_themeo <- function () { 
+  theme_classic()+
+    theme(strip.background = element_blank(),
+          axis.line = element_blank(),
+          axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
+          axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
+          axis.ticks.length=unit(-0.1, "cm"),
+          panel.border = element_rect(colour = "black", fill=NA, size=.5),
+          legend.title=element_blank(),
+          strip.text=element_text(hjust=0) )}
+
+### define custom boxplot by mean/ sd/ max
+sd.box <- function(d) {
+  return(data.frame(ymin=min(d), ymax=max(d), upper=mean(d)+sd(d), lower=mean(d)-sd(d), middle=mean(d)))
+}
+
+## set colors for fill_manual
+cols3 = c("#ffffbf",
+          "#e0f3f8",
+          "#fee090",
+          "#74add1",
+          "grey")
 
 
+readRDS("data/Crab Cleaned/Effort by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
+  filter(Year >= 1984, Year <= 2017, Location == "Morro_Bay") %>%
+ggplot() +
+  stat_summary(aes(Year, CPUE, group = Year), fun.data=sd.box, geom='boxplot') + #coerces the data with sd.box then plots boxplots
+  geom_smooth(aes(x = Year, y = CPUE), color = "black", alpha = 0.5)+
+  scale_y_continuous(expand =c(0.05,0.05)) +
+  scale_fill_manual(values = cols3, breaks = c("PRIA", "MARI", "AMSM", "MNHI", "NWHI"), guide = guide_legend(override.aes = list(alpha = 1, linetype = "blank")))+
+  scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
+  theme_themeo()
 
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
 
