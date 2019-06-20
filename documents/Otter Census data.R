@@ -369,7 +369,7 @@ sd.box <- function(d) {
 box_smoothed <- function(place, fill_color){
   readRDS("data/Crab Cleaned/Effort by Port") %>%
     mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
-    filter(Year >= 1984, Year <= 2017, Location == place, CPUE > 0) %>%
+    filter(Year >= 1984, Year <= 2017, Location == place, CPUE > 0, Year != 1997) %>%
     #filter(Year != 1997) %>%
   ggplot() +
     #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
@@ -393,13 +393,13 @@ p8 <- box_smoothed("Trinidad", "#fc8d62")
 #last one needs to be different because it has the ticks
 p9 <-   readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y")), CPUE = Effort * 0.0004535924) %>%
-  filter(Year >= 1984, Year <= 2017, Location == "Cresent_City") %>%
+  filter(Year >= 1984, Year <= 2017, Location == "Cresent_City", Year != 1997) %>%
   #filter(Year != 1997) %>%
   ggplot() +
   stat_summary(aes(Year, CPUE, group = Year), fun.data=sd.box, geom='boxplot', fill = "#fc8d62") + #coerces the data with sd.box then plots boxplots
   geom_smooth(aes(x = Year, y = CPUE), color = "black", alpha = 0.5)+
   scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
-  theme_themeo() +
+  theme_mine() +
   theme(axis.title.x = element_blank(),
         axis.title.y = element_blank())
 
