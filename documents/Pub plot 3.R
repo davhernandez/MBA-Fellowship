@@ -181,10 +181,63 @@ scatter3 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
 
 #Composite plot -------------------------------------------
 
-grid.arrange(arrangeGrob(scatter2, scatter1, scatter3,
+grid.arrange(arrangeGrob(scatter2, scatter1, scatter3, #morro bay, monterey, half moon bay
              ncol = 1,
              left = "Metric Tons per Offload Receipt",
              bottom = "Otter Population Size",
              top = "Otter Population Size vs CPUE")
              )
 
+#Just effort (not CPUE) ------------------------------------------------
+
+#Morro bay
+Effort1 <- readRDS("data/Crab Cleaned/Receipts by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay") %>%
+  group_by(Year) %>%
+  summarise(Effort = mean(receipts) * 0.0004535924) %>%
+  mutate(Location = "Morro Bay") %>%
+  merge(.,buffered_morro, by = "Year") %>%
+  ggplot(aes(x = Otters, y = Effort)) +
+  geom_point(color = "#fc8d62") +
+  ylab("Metric Tons per Landing Receipt") +
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  ggtitle("Morro Bay")
+  #coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+
+Effort2 <- readRDS("data/Crab Cleaned/Receipts by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Year <= 2014, Year >= 1985, Location == "Monterey") %>%
+  group_by(Year) %>%
+  summarise(Effort = mean(receipts) * 0.0004535924) %>%
+  mutate(Location = "Monterey") %>%
+  merge(.,buffered_morro, by = "Year") %>%
+  ggplot(aes(x = Otters, y = Effort)) +
+  geom_point(color = "#fc8d62") +
+  ylab("Metric Tons per Landing Receipt") +
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  ggtitle("Monterey")
+
+Effort3 <- readRDS("data/Crab Cleaned/Receipts by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Year <= 2014, Year >= 1985, Location == "Halfmoon_Bay") %>%
+  group_by(Year) %>%
+  summarise(Effort = mean(receipts) * 0.0004535924) %>%
+  mutate(Location = "Halfmoon Bay") %>%
+  merge(.,buffered_morro, by = "Year") %>%
+  ggplot(aes(x = Otters, y = Effort)) +
+  geom_point(color = "#fc8d62") +
+  ylab("Metric Tons per Landing Receipt") +
+  theme_classic() +
+  theme(axis.title.x = element_blank(),
+        axis.title.y = element_blank()) +
+  ggtitle("Half Moon Bay")
+
+grid.arrange(arrangeGrob(Effort1, Effort2, Effort3,
+                         ncol = 1,
+                         bottom = "Otter Population Size",
+                         left = "Landings Receipts"))
