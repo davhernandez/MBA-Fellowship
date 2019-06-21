@@ -12,6 +12,7 @@ library(ggplot2)
 library(dplyr)
 library(readxl)
 library(gridExtra)
+library(ggpubr)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
 
@@ -61,7 +62,7 @@ port_buffering <- function(ports, ocean, distance){
 
 #buffer range --------------------------------------
 #set the range (in km) around the ports that you want to buffer
-buffer_range <- 100
+buffer_range <- 150
 
 
 #100km around Monterey  ----------------------------------------------------------------------------------
@@ -83,7 +84,7 @@ buffered_monterey <- otter_individuals[which(otter_individuals$ATOS_ID %in% uniq
   summarise(Otters = sum(Count))
 
 #scatter plot of otter pop vs CPUE
-scatter1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
+scatter4 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Monterey") %>%
   group_by(Year) %>%
@@ -95,8 +96,10 @@ scatter1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   ylab("Metric Tons per Landing Receipt") +
   theme_classic() +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_cartesian(xlim = c(0,3000), ylim = c(0, 0.5))
   #facet_grid(vars(Location))
 
 #in case Kyle asks for a boxplot version
@@ -129,7 +132,7 @@ buffered_morro <-otter_individuals[which(otter_individuals$ATOS_ID %in% unique(b
   summarise(Otters = sum(Count))
 
 #scatter plot of otter popualtion size vs CPUE
-scatter2 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
+scatter5 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay") %>%
   group_by(Year) %>%
@@ -141,8 +144,10 @@ scatter2 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   ylab("Metric Tons per Landing Receipt") +
   theme_classic() +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_cartesian(xlim = c(0,3000), ylim = c(0, 0.5))
   #facet_grid(vars(Location))
 
 #100km around Halfmoon Bay -----------------------------------------------------
@@ -163,7 +168,7 @@ buffered_halfmoon <-otter_individuals[which(otter_individuals$ATOS_ID %in% uniqu
   summarise(Otters = sum(Count))
 
 #scatterplot of otter population size 
-scatter3 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
+scatter6 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   filter(Year <= 2014, Year >= 1985, Location == "Halfmoon_Bay") %>%
   group_by(Year) %>%
@@ -175,18 +180,32 @@ scatter3 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   ylab("Metric Tons per Landing Receipt") +
   theme_classic() +
   theme(axis.title.x = element_blank(),
-        axis.title.y = element_blank()) +
-  coord_cartesian(xlim = c(0,1800), ylim = c(0, 0.5))
+        axis.title.y = element_blank(),
+        axis.text.x = element_blank(),
+        axis.text.y = element_blank()) +
+  coord_cartesian(xlim = c(0,3000), ylim = c(0, 0.5))
   #facet_grid(vars(Location))
 
 #Composite plot -------------------------------------------
 
-grid.arrange(arrangeGrob(scatter2, scatter1, scatter3, #morro bay, monterey, half moon bay
+grid.arrange(arrangeGrob(scatter3, scatter1, scatter2, #morro bay, monterey, half moon bay
              ncol = 1,
              left = "Metric Tons per Offload Receipt",
              bottom = "Otter Population Size",
              top = "Otter Population Size vs CPUE")
              )
+
+#build composite plot
+composite <- ggarrange(scatter3, scatter6, scatter9,
+                      scatter1, scatter4, scatter7,
+                      scatter2, scatter5, scatter8,
+                      ncol=3, nrow = 3,
+                      align="h")
+#use grid.arrange to add labels to composite plor
+grid.arrange(arrangeGrob(composite,
+                         left = "Metric Tons per Offload Receipt",
+                         bottom = "Otter Population Size",
+                         top = "Otter Population Size vs CPUE"))
 
 #Just effort (not CPUE) ------------------------------------------------
 
