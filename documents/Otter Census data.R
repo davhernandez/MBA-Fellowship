@@ -183,52 +183,6 @@ readRDS("data/Crab Cleaned/Effort by Port") %>%
 
 #publication plots ----------------------------------------------------------------
 
-#Pub plot 1: CPUE regression ---------------------------------------------------
-
-#vector which allows manually setting colors for plot 1
-#set_colors <- c(Cresent_City = "#8da0cb", Trinidad = "#8da0cb", Eureka = "#8da0cb", Fort_Bragg = "#8da0cb", Bodega_Bay = "#8da0cb", San_Francisco = "#8da0cb", Halfmoon_Bay = "#fc8d62", Monterey = "#fc8d62", Morro_Bay = "#fc8d62")
-
-custom_palette <- palette(c('#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3','#fdb462','#b3de69','#fccde5','#d9d9d9'))
-  
-#regression for CPUE over time
-readRDS("data/Crab Cleaned/Effort by Port") %>%
-  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  mutate(presence = ifelse(as.character(Location) %in% c("Morro_Bay", "Monterey", "Halfmoon_Bay"), "Otters Present", "Otters Absent")) %>%
-  filter(Year >= 1984, Year <= 2017, Location != "Statewide") %>%
-  group_by(Location, Year, presence) %>%
-  summarise(CPUE = sum(Effort) * 0.0004535924) %>% #metric tons per receipt
-  filter(Year != 1997) %>% #remove the outlier year
-  ggplot(aes(x = Year, y = CPUE, color = Location, linetype = presence)) +
-  geom_smooth(se = FALSE) +
-  scale_colour_brewer(type = "qual", palette = "Set1") +
-  #scale_linetype_manual(values = set_colors) +
-  theme_classic() +
-  theme(strip.background = element_blank(),
-        axis.line = element_blank(),
-        axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
-        axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
-        axis.ticks.length=unit(-0.1, "cm"),
-        panel.border = element_rect(colour = "black", fill=NA, size=.5),
-        legend.title=element_blank(),
-        strip.text=element_text(hjust=0)
-  ) +
-  ggtitle("CPUE by Port") +
-  ylab("Metric tons per offload receipt")
-  
-  #MAYBE not useful
-  #regression of just the southern ports
-  #readRDS("data/Crab Cleaned/Effort by Port") %>%
-    #mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-    #filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1984, Year <= 2017) %>%
-    #group_by(Location, Year) %>%
-    #summarise(CPUE = sum(Effort) * 0.0004535924) %>% #metric tons per receipt
-    #filter(Year != 1997) %>% #remove the outlier year
-    #ggplot(aes(x = Year, y = CPUE, color = Location)) +
-    #geom_smooth(se = FALSE) +
-    #theme_classic() +
-    #ggtitle("CPUE by port (tons per landing receipt)")
-
-
 # Figure 1 CPUE by Port ---------------------------------------------
 #CPUE summed across years
 
@@ -272,7 +226,7 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   #filter(Year != 1997) %>%
   ggplot( aes(x = Year, y = CPUE)) +
   #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
-  geom_line(color = "#8da0cb", size = 1) +
+  geom_line(color = "#0aa1ff", size = 1) +
   geom_smooth(aes(x = Year, y = CPUE), color = "black", alpha = 0.5, size = 0.5)+
   scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
   theme_bw() +
@@ -284,8 +238,8 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
         axis.ticks.length=unit(-0.1, "cm"))
 
 
-p2 <- box_smoothed("Monterey", "#8da0cb")
-p3 <- box_smoothed("Halfmoon_Bay", "#8da0cb")
+p2 <- box_smoothed("Monterey", "#0aa1ff")
+p3 <- box_smoothed("Halfmoon_Bay", "#0aa1ff")
 #without otters
 p4 <- box_smoothed("San_Francisco", "#fc8d62")
 p5 <- box_smoothed("Bodega_Bay", "#fc8d62")
@@ -301,8 +255,8 @@ pub2_composite <- ggarrange(p9,p8,p7,p6,p5,p4,p3,p2, p1,
 
 grid.arrange(arrangeGrob(pub2_composite,
              ncol = 1,
-             left = "Metric Tons per Offload Reciept",
-             bottom = "Year")
+             left = "metric tons per offload reciept",
+             bottom = "year")
 )
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
 
@@ -363,37 +317,31 @@ grid.arrange(arrangeGrob(pub5_composite, #calling a list object requires explici
                          left= "r",
                          bottom = "Year"))
 
-# Pub Plot 6 Proportial Landings/CPUE/Tons ----------------------------------------------------------
+# Figure 2 Proportial CPUE ----------------------------------------------------------
 
-readRDS("data/Crab Cleaned/Regional Data") %>%
-  filter(Region!= "Statewide") %>%
-  ggplot(aes(x = Year, y = lbs_proportion, fill = Region)) +
+#Sum CPUE by year and port
+proportioned_CPUE <- ungroup(readRDS("data/Crab Cleaned/Effort by Port")) %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location != "Statewide") %>%
+  group_by(Year, Location) %>%
+  summarize(Effort = sum(Effort)) %>%
+  mutate(presence = ifelse(Location %in% c("Halfmoon_Bay", "Monterey", "Morro_Bay"), "Otters Present", "Otters Absent"))
+  
+#divide a single port's CPUE by the total, statewide CPUE
+proportioned_CPUE$prop_CPUE <- apply(proportioned_CPUE,1, function(x)  as.numeric(x["Effort"])/sum(proportioned_CPUE$Effort[which(proportioned_CPUE$Year == x["Year"])]))
+
+proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
   geom_bar(stat = "identity", position = "stack", width = 1, color = "black") +
   scale_x_continuous(expand = c(0,0)) +
   scale_y_continuous(expand = c(0,0), breaks = c(0.25,0.50,0.75,1)) +
+  scale_fill_manual(values = c("Otters Present" = "#0aa1ff","Otters Absent" = "#fc8d62")) +
   theme_classic() +
   theme(
-    panel.border = element_rect(colour = "black", fill=NA, size=.5),
+    panel.border = element_rect(colour = "black", fill=NA, size=.3),
     legend.title=element_blank()) +
-  ggtitle("Proportional Yearly Landings Weight") +
-  ylab("Proportion of Landings")
+  ylab("proportion of CPUE")
 
-
-proportioned_CPUE <- readRDS("data/Crab Cleaned/Regional Data") %>%
-  filter(Region!= "Statewide") %>%
-  mutate(CPUE = lbs/receipts)
-
-proportioned_CPUE$prop_CPUE <- apply(proportioned_CPUE,1, function(x)  as.numeric(x["CPUE"])/sum(proportioned_CPUE$CPUE[which(proportioned_CPUE$Year == x["Year"])]))
-
-  ggplot(proportioned_CPUE, aes(x = Year, y = prop_CPUE, fill = Region)) +
-  geom_bar(stat = "identity", position = "stack", width = 1, color = "black") +
-  scale_x_continuous(expand = c(0,0)) +
-  scale_y_continuous(expand = c(0,0), breaks = c(0.25,0.50,0.75,1)) +
-  theme_classic() +
-  theme(
-    panel.border = element_rect(colour = "black", fill=NA, size=.5),
-    legend.title=element_blank()) +
-  ggtitle("Proportional of Statewide CPUE") +
-  ylab("Proportion of CPUE")
 # sandbox ------------------------------------------------------
-
