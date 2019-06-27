@@ -1,16 +1,10 @@
 #setup -------------------------------------------------------------
-library(sf)
-library(sp)
-library(rgeos)
-library(rgdal)
-library(tmap)
 library(stringr)
 library(ggplot2)
 library(dplyr)
 library(readxl)
 library(gridExtra)
 library(lemon)
-library(tidyverse)
 library(ggpubr)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
@@ -258,6 +252,19 @@ grid.arrange(arrangeGrob(pub2_composite,
              left = "metric tons per offload reciept",
              bottom = "year")
 )
+
+#Figure 1 r --------------------------------------------------------------------
+
+readRDS("data/Crab Cleaned/Effort by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Year >= 1983, Year <= 2017) %>%
+  group_by(Location, Year) %>%
+  summarise(ln_CPUE = log(sum(Effort))) %>% #natural log of CPUE
+  mutate(r = ln_CPUE - lag(ln_CPUE, n = 1)) %>% #year to year change in CPUE
+  group_by(Location) %>%
+  summarise(mu = mean(r, na.rm = TRUE), sigma = sd(r, na.rm = TRUE)) %>% View #calculate mean and sd for each location
+
+
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
 
 #CPUE at Halfmoon Bay, Monterey & Morro Bay vs. Otter population within 100km of the ports
