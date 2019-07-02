@@ -2,11 +2,12 @@
 library(readxl)
 library(dplyr)
 library(lubridate)
+library(aTSA)
 
 #DKK Exchange rate --------------------------------------------------------------------------
 
 #Faroe Islands data is by month, so you just have to trim off the day and average over the months
-dkk_exchange_rate <- read.csv("data/Salmon public data/DKKExchangeRate.csv")
+dkk_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/DKKExchangeRate.csv")
 colnames(dkk_exchange_rate) <- c("Date", "Rate")
 
 #mutate to get a month and a year
@@ -110,7 +111,7 @@ rm(list = "faroe_product_type_price", "faroe_product_type_weight")
 
 #NOK Exchange rate ------------------------------------------------------------------------------
 
-nok_exchange_rate <- read.csv("data/Salmon public data/NOKExchangeRate.csv")
+nok_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/NOKExchangeRate.csv")
 colnames(nok_exchange_rate) <- c("Date", "Rate")
 nok_exchange_rate$Date <- as.Date(nok_exchange_rate$Date, "%d-%b-%y")
 #Norway exchange rate is by week, so you have to fragment by weeks
@@ -128,18 +129,35 @@ nok_exchange_rate <-  nok_exchange_rate %>%
 
 #Norway weekly prices ----------------------------------------------------------------------------------
 
-norway_prices <- read_xls("data/Salmon public data/NorwayPricesWeek.xls")
+norway_prices <- read_xls("data/Salmon public data/NorwayPricesWeek.xls") #covers 1995, week 1 to 2013, week 13
 colnames(norway_prices) <- norway_prices[8,] #use row 8 to grab column names
 norway_prices <- norway_prices[-(1:8),1:9] #keep only the columns of interest
 norway_prices <- as.data.frame(apply(norway_prices, 2, as.numeric))
 
+nasdaq_prices <- read_xls("data/Salmon public data/NASDAQsalmonIndexHistory.xls") #covers 2013, week 14 to 2019, week 22
+colnames(nasdaq_prices) <- nasdaq_prices[5,] #use row 5 to grab column names
+nasdaq_prices <- nasdaq_prices[-(1:5), 1:11] #keep only columns of interest
+nasdaq_prices <- apply(nasdaq_prices, 2, as.numeric)
+nasdaq_prices <- as.data.frame(cbind(nasdaq_prices, apply(nasdaq_prices[,9:11], 1, mean, na.rm = TRUE))) #turn 7-9kg columns into a mean which represents 7+ category
+nasdaq_prices <- nasdaq_prices[,-(9:11)]
+colnames(nasdaq_prices)[9] <- "7+"
+
+#combine into a single data frame
+norway_prices <- rbind(norway_prices, nasdaq_prices)
+rm(list = "nasdaq_prices")
+
 #convert to USD
-norway_prices[,2:9] <- as.data.frame( #make it into a dataframe
+norway_prices[,3:9] <- as.data.frame( #make it into a dataframe
   t( #transpose the output b/c it is a matrix
     apply(norway_prices, 1,  function(x)(x[3:9] / nok_exchange_rate$Rate[which(nok_exchange_rate$Year == x["Year"] & nok_exchange_rate$Week == x["Week"])])) #matches the exchange rate for the week and year of the row, then divides all of the values by the rate
   )
 )
 
+#Norway stationary test ------------------------------------------------------------------
+for(i in 3:9){
+  print(paste(i, "################################################################################", ""))
+  adf.test(norway_prices[,i], nlag = 23)
+}
 #Chile Monthly Imports to US ---------------------------------------------------------------------------------
 
 #Monthly imports of various salmon products to the US
