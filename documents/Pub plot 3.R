@@ -1,3 +1,4 @@
+#setup ---------------------------------------------
 #code based on `Buffer round Moss Landings.R`
   #trimmed the fat just to get the plots
   #for more detail and explanation about the code, go to the original document
@@ -163,6 +164,14 @@ return(output)
 }
 
 #plots -------------------------------------------------------------------------
+
+#Figure 3
+fig_1 <- buffer_plots_function(buffer_range = 100, axes = TRUE)
+ggarrange(fig_1[[1]], fig_1[[2]], fig_1[[3]],
+          ncol = 1, nrow = 3,
+          align = "hv")
+
+#Supplimental 1
 buffers_axis <- buffer_plots_function(buffer_range = 20, axes = TRUE)
 buffers <- lapply(c(50,100,150,200), buffer_plots_function)
 
