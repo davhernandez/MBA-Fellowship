@@ -182,10 +182,10 @@ readRDS("data/Crab Cleaned/Effort by Port") %>%
 
 #theme that Kyle likes
 theme_mine <- function () { 
-  theme_bw()+
+  theme_classic()+
     theme(axis.title.x = element_blank(),
           axis.text.x = element_blank(),
-          axis.ticks = element_blank(),
+          #axis.ticks = element_blank(),
           axis.title.y = element_blank(),
           axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
           axis.ticks.length=unit(-0.1, "cm")) }
@@ -204,8 +204,8 @@ box_smoothed <- function(place, fill_color){
     #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE)) +
     #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
-    geom_line( color = fill_color, size = 1) +
-    geom_smooth(aes(x = Year, y = CPUE), color = "black", alpha = 0.5, size = 0.5)+
+    geom_line( color = "black", size = 1) +
+    geom_smooth(aes(x = Year, y = CPUE), color = fill_color, fill = fill_color, alpha = 0.5, size = 1)+
     scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
     theme_mine() 
     #coord_cartesian(ylim = c(0,5))
@@ -220,13 +220,13 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   #filter(Year != 1997) %>%
   ggplot( aes(x = Year, y = CPUE)) +
   #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
-  geom_line(color = "#0aa1ff", size = 1) +
-  geom_smooth(aes(x = Year, y = CPUE), color = "black", alpha = 0.5, size = 0.5)+
+  geom_line(color = "black", size = 1) +
+  geom_smooth(aes(x = Year, y = CPUE), color = "#0aa1ff", fill = "#0aa1ff", alpha = 0.5, size = 1)+
   scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
-  theme_bw() +
+  theme_classic() +
   theme(axis.title.x = element_blank(),
         axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
-        axis.ticks = element_blank(),
+        #axis.ticks = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
         axis.ticks.length=unit(-0.1, "cm"))
@@ -235,13 +235,13 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
 p2 <- box_smoothed("Monterey", "#0aa1ff")
 p3 <- box_smoothed("Halfmoon_Bay", "#0aa1ff")
 #without otters
-p4 <- box_smoothed("San_Francisco", "#fc8d62")
-p5 <- box_smoothed("Bodega_Bay", "#fc8d62")
-p6 <- box_smoothed("Fort_Bragg", "#fc8d62")
-p7 <- box_smoothed("Eureka", "#fc8d62")
-p8 <- box_smoothed("Trinidad", "#fc8d62")
+p4 <- box_smoothed("San_Francisco", "#d4000b")
+p5 <- box_smoothed("Bodega_Bay", "#d4000b")
+p6 <- box_smoothed("Fort_Bragg", "#d4000b")
+p7 <- box_smoothed("Eureka", "#d4000b")
+p8 <- box_smoothed("Trinidad", "#d4000b")
 #last one needs to be different because it has the ticks
-p9 <- box_smoothed("Cresent_City", "#fc8d62")
+p9 <- box_smoothed("Cresent_City", "#d4000b")
 
 pub2_composite <- ggarrange(p9,p8,p7,p6,p5,p4,p3,p2, p1,
                        ncol=1, nrow = 9,
@@ -257,7 +257,7 @@ grid.arrange(arrangeGrob(pub2_composite,
 
 readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Year >= 1983, Year <= 2017) %>%
+  filter(Year >= 1983, Year <= 2017) %>% #consider modifying the year range
   group_by(Location, Year) %>%
   summarise(ln_CPUE = log(sum(Effort))) %>% #natural log of CPUE
   mutate(r = ln_CPUE - lag(ln_CPUE, n = 1)) %>% #year to year change in CPUE
