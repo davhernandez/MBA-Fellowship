@@ -188,7 +188,8 @@ theme_mine <- function () {
           #axis.ticks = element_blank(),
           axis.title.y = element_blank(),
           axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
-          axis.ticks.length=unit(-0.1, "cm")) }
+          axis.ticks.length=unit(-0.1, "cm"),
+          panel.border = element_rect(colour = "black", fill=NA, size=.5)) }
 
 ### define custom boxplot by mean/ sd/ max
 #sd.box <- function(d) {
@@ -229,7 +230,8 @@ p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
         #axis.ticks = element_blank(),
         axis.title.y = element_blank(),
         axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
-        axis.ticks.length=unit(-0.1, "cm"))
+        axis.ticks.length=unit(-0.1, "cm"),
+        panel.border = element_rect(colour = "black", fill=NA, size=.5),)
 
 
 p2 <- box_smoothed("Monterey", "#0aa1ff")
