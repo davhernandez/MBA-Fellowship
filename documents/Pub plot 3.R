@@ -66,7 +66,7 @@ morro_bay_st <- st_transform(morro_bay_st, 3310)
 #buffer around fishing ports --------------------------------------------------------------------
 
 
-buffer_plots_function <- function(buffer_range, axes = FALSE){
+buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000)){
   
   #buffering function
   port_buffering <- function(ports, ocean, distance){
@@ -126,7 +126,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE){
             axis.text.y = element_blank(),
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
-      coord_cartesian(xlim = c(0,3000), ylim = c(0, 0.5))
+      coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
   }
   
   #make the plots
@@ -156,7 +156,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE){
             axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
-      coord_cartesian(xlim = c(0,3000), ylim = c(0, 0.5))
+      coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
     
     
   }
@@ -166,7 +166,7 @@ return(output)
 #plots -------------------------------------------------------------------------
 
 #Figure 3
-fig_1 <- buffer_plots_function(buffer_range = 100, axes = TRUE)
+fig_3 <- buffer_plots_function(buffer_range = 100, axes = TRUE, x_scale = c(940,1790))
 ggarrange(fig_1[[1]], fig_1[[2]], fig_1[[3]],
           ncol = 1, nrow = 3,
           align = "hv")
