@@ -6,6 +6,7 @@ library(readxl)
 library(gridExtra)
 library(lemon)
 library(ggpubr)
+library(aTSA)
 
 setwd(dir = "~/Desktop/Grad school/github/MBA Fellowship")
 
@@ -282,7 +283,7 @@ growth_rate <-function(site_name){
     mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   #filter the site
     filter(Location == site_name) %>%
-    group_by(Year) %>%
+    group_by(Year, Location) %>%
     summarise(CPUE = log(sum(Effort))) %>% #careful about this. Kyle asked for a log transform. see pg 117 of notebook
     mutate(r = NA)
     for(i in 2:nrow(scratch)){
@@ -306,25 +307,33 @@ plot_list_present <- lapply(list("Halfmoon_Bay", "Monterey"),
 #the last plot in the series has to have different axes to display the year ticks at the bottom
 plot_list_present[[3]] <- growth_rate("Morro_Bay") %>%
                           ggplot(aes(x = Year, y = r, group = Year)) +
-                            geom_point(color = "#8da0cb") #+
+                            geom_point(color = "#8da0cb") +
                             #coord_cartesian(ylim = c(-6.5,6.5)) +
-                            theme_bw() +
+                            theme_classic() +
                             theme(axis.title.y = element_blank(),
-                                  axis.ticks.y = element_blank(),
                                   axis.title.x = element_blank(),
-                                  axis.ticks.x = element_blank())
+                                  axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
+                                  axis.text.x = element_text(margin = margin(c(0.2,1), unit = "cm")),
+                                  axis.ticks.length=unit(-0.1, "cm"),
+                                  panel.border = element_rect(colour = "black", fill=NA, size=.5))
 
 #paste all plots together
 pub5_composite <- ggarrange(plot_list_absent[[1]], plot_list_absent[[2]], plot_list_absent[[3]], plot_list_absent[[4]], plot_list_absent[[5]], plot_list_absent[[6]], plot_list_present[[1]], plot_list_present[[2]], plot_list_present[[3]],
           ncol = 1,
           nrow = 9,
-          align = "h")
+          align = "hv")
 
 grid.arrange(arrangeGrob(pub5_composite, #calling a list object requires explicitly calling `grob =`
                          ncol = 1,
                          top = "Change in CPUE",
                          left= "r",
                          bottom = "Year"))
+#r MANOVA ---------------------------------------------------------
+#calculate MANOVA for intrinsic growth rate
+
+r_anova <- as.data.frame(do.call(rbind, lapply(c("Trinidad", "Cresent_City", "Eureka", "Fort_Bragg", "Bodega_Bay", "San_Francisco", "Halfmoon_Bay", "Monterey", "Morro_Bay"), function(x) growth_rate(site_name = x))))
+
+summary(aov(r ~ Location, r_anova))
 
 # Figure 2 Proportial CPUE ----------------------------------------------------------
 
@@ -353,4 +362,48 @@ ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
     legend.title=element_blank()) +
   ylab("proportion of CPUE")
 
+#regression line version
+proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+  filter(presence == "Otters Present") %>%
+  ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
+  geom_point(stat = "identity") +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_x_continuous(expand = c(0,0)) +
+  scale_y_continuous(expand = c(0,0), breaks = c(0.25,0.50,0.75,1)) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(colour = "black", fill=NA, size=.3),
+    legend.title=element_blank()) +
+  ylab("proportion of CPUE")
+
+proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+  filter(presence == "Otters Present") %>%
+  summary(lm(prop_CPUE ~ Year, .))
 # sandbox ------------------------------------------------------
+
+readRDS("data/Crab Cleaned/Effort by Port") %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location != "Statewide", Year == 1997) %>% View
+
+
+dummy <- proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+  filter(presence == "Otters Present") %>%
+  mutate(first_diff = NA)
+  
+for(i in 2:nrow(dummy)){
+  dummy$first_diff[i] <- dummy$prop_CPUE[i] - dummy$prop_CPUE[i-1]
+}
+  ggplot(dummy, aes(x = Year, y = prop_CPUE)) +
+           geom_smooth(method = "lm", formula = y ~ x)
+  summary(lm(prop_CPUE ~ Year, dummy))
+adf.test(dummy$first_diff, nlag = 9)
+
+  
+mean(dummy$prop_CPUE)
+sd(dummy$prop_CPUE)
