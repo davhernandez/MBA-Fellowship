@@ -127,6 +127,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
       coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
+    #coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
   }
   
   #make the plots
@@ -157,6 +158,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
       coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
+    #coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
     
     
   }
