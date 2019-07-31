@@ -33,10 +33,10 @@ otter_counts <- otter_counts %>%
 
 #import port data
 port_landings <- readRDS("data/Crab Cleaned/Landings Weight by Port")
-#select monterey and 1984-2017
+#select monterey and 1985-2017
 port_landings$Date <- as.numeric(format(port_landings$Date, "%Y"))
 port_landings <- port_landings %>%
-  filter(Location == c("Monterey", "Morro_Bay"), Date >= 1984, Date <= 2017)%>%
+  filter(Location == c("Monterey", "Morro_Bay"), Date >= 1985, Date <= 2017)%>%
   group_by(Date) %>%
   summarise(lbs = sum(lbs)) %>%
   mutate("Proportional Change" = NA)
@@ -58,12 +58,12 @@ ggplot(proportional, aes(x = `Otter Population Size`, y = `Proportional Change`)
 #add regional data into the mix
 regional <- readRDS("data/Crab Cleaned/Regional Data")
 central <- regional %>%
-  filter(Region == "Central", Year >= 1984, Year <= 2017) %>%
+  filter(Region == "Central", Year >= 1985, Year <= 2017) %>%
   group_by(Year, Region) %>%
   summarise(lbs = sum(lbs)) %>%
   mutate("Proportional Change" = NA)
 statewide <- regional %>%
-  filter(Region == "Statewide", Year >= 1984, Year <= 2017) %>%
+  filter(Region == "Statewide", Year >= 1985, Year <= 2017) %>%
   group_by(Year, Region) %>%
   summarise(lbs = sum(lbs)) %>%
   mutate("Proportional Change" = NA)
@@ -141,7 +141,7 @@ readRDS("data/Crab Cleaned/Landings Weight by Port") %>%
 
 readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1984, Year <= 2017) %>%
+  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1985, Year <= 2017) %>%
   group_by(Location, Year) %>%
   summarise(tons = sum(Effort) * 0.0004535924) %>% #metric tons per receipt
   filter(Year != 1997) %>%
@@ -160,7 +160,7 @@ readRDS("data/Crab Cleaned/Effort by Port") %>%
 
 readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1984, Year <= 2017) %>%
+  filter(Location %in% c("Monterey", "Morro_Bay", "Halfmoon_Bay", "San_Francisco", "Bodega_Bay"), Year >= 1985, Year <= 2017) %>%
   group_by(Location, Year) %>%
   summarise(receipts = sum(receipts)) %>% #metric tons per receipt
   ggplot(aes(x = Year, y = receipts, color = Location)) +
@@ -200,7 +200,7 @@ theme_mine <- function () {
 box_smoothed <- function(place, fill_color){
   readRDS("data/Crab Cleaned/Effort by Port") %>%
     mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-    filter(Year >= 1984, Year <= 2017, Location == place) %>%
+    filter(Year >= 1985, Year <= 2017, Location == place) %>%
     group_by(Year) %>%
     summarise(CPUE = sum(Effort * 0.0004535924)) %>%
     #filter(Year != 1997) %>%
@@ -216,7 +216,7 @@ box_smoothed <- function(place, fill_color){
 #with otters
 p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Year >= 1984, Year <= 2017, Location == "Morro_Bay") %>%
+  filter(Year >= 1985, Year <= 2017, Location == "Morro_Bay") %>%
   group_by(Year) %>%
   summarise(CPUE = sum(Effort * 0.0004535924)) %>%
   #filter(Year != 1997) %>%
@@ -260,12 +260,103 @@ grid.arrange(arrangeGrob(pub2_composite,
 
 readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Year >= 1983, Year <= 2017) %>% #consider modifying the year range
+  filter(Year >= 1985, Year <= 2017, Effort < 60000) %>% #consider modifying the year range
   group_by(Location, Year) %>%
   summarise(ln_CPUE = log(sum(Effort))) %>% #natural log of CPUE
   mutate(r = ln_CPUE - lag(ln_CPUE, n = 1)) %>% #year to year change in CPUE
   group_by(Location) %>%
   summarise(mu = mean(r, na.rm = TRUE), sigma = sd(r, na.rm = TRUE)) %>% View #calculate mean and sd for each location
+
+#Figure 1 normalized --------------------------------------------------------
+
+#for each port, set 1985 to 0
+# normalize it to 1
+#save it with port name, year, and effort
+
+#within year, find mean
+#set loess curve to that mean
+#what if the start point isn't 0 after loess?
+#extract values at each year
+#subtract those values from each port's value
+
+#but then the limits aren't -1,1
+#you would have to re-normalize
+
+#have to normalize the ports outside of the function
+fig1_normal <- bind_rows(lapply(c("Trinidad", "Cresent_City", "Eureka", "Fort_Bragg", "Bodega_Bay", "San_Francisco", "Halfmoon_Bay", "Monterey", "Morro_Bay"), function(port_name) readRDS("data/Crab Cleaned/Effort by Port") %>%
+    mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+    filter(Year >= 1985, Year <= 2017, Effort < 40000, Location == port_name) %>%
+    group_by(Location, Year) %>%
+    summarise(CPUE = sum(Effort * 0.0004535924)) %>%
+    mutate(normalized_CPUE = (CPUE - CPUE[which(Year == 1985)])) %>% #set 1985 as 0 point
+      mutate(normalized_CPUE = normalized_CPUE/max(abs(normalized_CPUE))) #normalized deviations to 1
+  ))
+
+#subtract out the statewide average
+fig1_normal <- merge(fig1_normal, fig1_normal %>%
+        group_by(Year) %>%
+        summarise(fishing_success = mean(normalized_CPUE)), by = "Year") %>%
+  mutate(normal = normalized_CPUE - fishing_success)
+
+#for all ports
+  #set the zero point of the whole plot as the mean for 1985
+  #normalize to -1,1
+#find mean line from there
+#Plot above and below the mean line
+
+#create a new data object that gets rid of the outlier data points
+
+normalized <- function(place, fill_color, axes = FALSE){
+  
+  #plot the data
+  if(axes == TRUE){ #for the bottom plot with axis labels
+    fig1_normal %>%
+      filter(Location == place) %>%
+      ggplot(aes(x = Year, y = normal)) +
+      geom_line(color = "black", size = 1) + #plot line
+      geom_line(aes(x = 1985:2017, y = 0)) + #flat line @ 0
+      #geom_smooth(aes(x = Year, y = normal), color = fill_color, fill = fill_color, alpha = 0.5, size = 1) + #loess curve with specific fill color
+      scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
+      scale_y_continuous(breaks = c(-0.5, 0, 0.50), limits = c(-0.7,0.7)) +
+      theme_classic() +
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
+            #axis.ticks = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
+            axis.ticks.length=unit(-0.1, "cm"),
+            panel.border = element_rect(colour = "black", fill=NA, size=.5),)
+  } else {
+    fig1_normal %>%
+      filter(Location == place) %>%
+    ggplot(aes(x = Year, y = normal)) +
+    geom_line(color = "black", size = 1) + #plot line
+    geom_line(aes(x = 1985:2017, y = 0)) + #flat line @ 0
+    #geom_smooth(aes(x = Year, y = normal), color = fill_color, fill = fill_color, alpha = 0.5, size = 1) + #loess curve with specific fill color
+    scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
+    scale_y_continuous(breaks = c(-0.5, 0, 0.50), limits = c(-0.7,0.7)) +
+    theme_mine() 
+  }
+}
+
+n1 <- normalized("Morro_Bay", "#0aa1ff", TRUE)
+n2 <- normalized("Monterey", "#0aa1ff")
+n3 <- normalized("Halfmoon_Bay", "#0aa1ff")
+#without otters
+n4 <- normalized("San_Francisco", "#d4000b")
+n5 <- normalized("Bodega_Bay", "#d4000b")
+n6 <- normalized("Fort_Bragg", "#d4000b")
+n7 <- normalized("Eureka", "#d4000b")
+n8 <- normalized("Trinidad", "#d4000b")
+n9 <- normalized("Cresent_City", "#d4000b")
+
+grid.arrange(arrangeGrob(ggarrange(n9,n8,n7,n6,n5,n4,n3,n2,n1,
+                                   ncol=1, nrow = 9,
+                                   align="v"),
+                         ncol = 1,
+                         left = "residual normalized fishing success",
+                         bottom = "year")
+)
 
 
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
@@ -340,7 +431,7 @@ summary(aov(r ~ Location, r_anova))
 #Sum CPUE by year and port
 proportioned_CPUE <- ungroup(readRDS("data/Crab Cleaned/Effort by Port")) %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location != "Statewide") %>%
+  filter(Location != "Statewide", Effort < 40000) %>%
   group_by(Year, Location) %>%
   summarize(Effort = sum(Effort)) %>%
   mutate(presence = ifelse(Location %in% c("Halfmoon_Bay", "Monterey", "Morro_Bay"), "Otters Present", "Otters Absent"))
@@ -376,7 +467,7 @@ proportioned_CPUE %>%
   theme(
     panel.border = element_rect(colour = "black", fill=NA, size=.3),
     legend.title=element_blank()) +
-  ylab("proportion of CPUE")
+  ylab("proportion of fishing success")
 
 proportioned_CPUE %>%
   group_by(Year, presence) %>%
@@ -385,25 +476,27 @@ proportioned_CPUE %>%
   summary(lm(prop_CPUE ~ Year, .))
 # sandbox ------------------------------------------------------
 
-readRDS("data/Crab Cleaned/Effort by Port") %>%
+
+fitted_CPUE <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location != "Statewide", Year == 1997) %>% View
+  filter(Year >= 1985, Year <= 2017, Effort < 60000) %>%
+  group_by(Location, Year) %>%
+  summarise(CPUE = sum(Effort * 0.0004535924)) %>%
+  group_by(Year) %>%
+  summarise(CPUE2 = mean(CPUE)) %>% #find the mean CPUE within a year
+  loess(CPUE2 ~ Year, data = .) #fit loess curve. Default smoothing of 75%
 
+fitted_CPUE <- cbind(fitted_CPUE$fitted, c(1985:2017)) #add a column of years to match the data later
+colnames(fitted_CPUE) <- c("fitted", "Year")
 
-dummy <- proportioned_CPUE %>%
-  group_by(Year, presence) %>%
-  summarise(prop_CPUE = sum(prop_CPUE)) %>%
-  filter(presence == "Otters Present") %>%
-  mutate(first_diff = NA)
+#plot the data
+  port_data <- readRDS("data/Crab Cleaned/Effort by Port") %>%
+    mutate(Year = as.numeric(format(.$Date, "%Y"))) %>% #convert dates to Year
+    filter(Year >= 1985, Year <= 2017, Effort < 60000, Location == "San_Francisco") %>% #cut out outliers, pick relevant years, keep only the names port location
+    group_by(Year) %>%
+    summarise(CPUE = sum(Effort * 0.0004535924)) %>% #sum over a year and convert to metric tons
+    merge(., fitted_CPUE, by = "Year") %>%
+    mutate(normalize_CPUE = (CPUE - fitted)) %>%
+    mutate(normalize_CPUE = (normalize_CPUE - normalize_CPUE[which(Year == 1985)])) %>%
+    mutate(normalize_CPUE = normalize_CPUE/max(normalize_CPUE))
   
-for(i in 2:nrow(dummy)){
-  dummy$first_diff[i] <- dummy$prop_CPUE[i] - dummy$prop_CPUE[i-1]
-}
-  ggplot(dummy, aes(x = Year, y = prop_CPUE)) +
-           geom_smooth(method = "lm", formula = y ~ x)
-  summary(lm(prop_CPUE ~ Year, dummy))
-adf.test(dummy$first_diff, nlag = 9)
-
-  
-mean(dummy$prop_CPUE)
-sd(dummy$prop_CPUE)
