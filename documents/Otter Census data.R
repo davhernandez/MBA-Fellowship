@@ -200,13 +200,12 @@ theme_mine <- function () {
 box_smoothed <- function(place, fill_color){
   readRDS("data/Crab Cleaned/Effort by Port") %>%
     mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-    filter(Year >= 1985, Year <= 2017, Location == place) %>%
+    filter(Year >= 1985, Year <= 2017, Location == place, Effort < 40000) %>%
     group_by(Year) %>%
     summarise(CPUE = sum(Effort * 0.0004535924)) %>%
-    #filter(Year != 1997) %>%
   ggplot(aes(x = Year, y = CPUE)) +
     #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
-    geom_line( color = "black", size = 1) +
+    geom_point( color = "black", size = 1) +
     geom_smooth(aes(x = Year, y = CPUE), color = fill_color, fill = fill_color, alpha = 0.5, size = 1)+
     scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
     theme_mine() 
@@ -216,13 +215,12 @@ box_smoothed <- function(place, fill_color){
 #with otters
 p1 <- readRDS("data/Crab Cleaned/Effort by Port") %>%
   mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Year >= 1985, Year <= 2017, Location == "Morro_Bay") %>%
+  filter(Year >= 1985, Year <= 2017, Location == "Morro_Bay", Effort < 40000) %>%
   group_by(Year) %>%
   summarise(CPUE = sum(Effort * 0.0004535924)) %>%
-  #filter(Year != 1997) %>%
   ggplot( aes(x = Year, y = CPUE)) +
   #geom_boxplot(aes(x = Year, y = CPUE, group = Year),outlier.shape = NA, fill = "#fc8d62") +
-  geom_line(color = "black", size = 1) +
+  geom_point(color = "black", size = 1) +
   geom_smooth(aes(x = Year, y = CPUE), color = "#0aa1ff", fill = "#0aa1ff", alpha = 0.5, size = 1)+
   scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015))+
   theme_classic() +
