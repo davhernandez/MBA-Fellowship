@@ -111,7 +111,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
   default_plot <- function(site){
     readRDS("data/Crab Cleaned/Effort by Port") %>%
       mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-      filter(Year <= 2014, Year >= 1985, Location == site) %>%
+      filter(Year <= 2014, Year >= 1985, Location == site, Effort < 40000) %>%
       group_by(Year) %>%
       summarise(CPUE = mean(Effort) * 0.0004535924) %>%
       mutate(Location = "Monterey") %>%
@@ -140,7 +140,7 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
     #plot with axis labels
     output[[3]] <-     readRDS("data/Crab Cleaned/Effort by Port") %>%
       mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-      filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay") %>%
+      filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay", Effort < 40000) %>%
       group_by(Year) %>%
       summarise(CPUE = mean(Effort) * 0.0004535924) %>%
       mutate(Location = "Morro_Bay") %>%
@@ -169,7 +169,7 @@ return(output)
 
 #Figure 3
 fig_3 <- buffer_plots_function(buffer_range = 100, axes = TRUE, x_scale = c(940,1790))
-ggarrange(fig_1[[1]], fig_1[[2]], fig_1[[3]],
+ggarrange(fig_3[[1]], fig_3[[2]], fig_3[[3]],
           ncol = 1, nrow = 3,
           align = "hv")
 
