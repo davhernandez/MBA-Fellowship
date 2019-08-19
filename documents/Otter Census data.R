@@ -356,7 +356,65 @@ grid.arrange(arrangeGrob(ggarrange(n9,n8,n7,n6,n5,n4,n3,n2,n1,
                          bottom = "year")
 )
 
+#Figure 1S yearly effort ----------------------------------------------------
 
+mapping_receipts <- function(place, fill_color, axes = FALSE){
+  #plotting with labelled axes
+  if(axes == TRUE){
+    readRDS("data/Crab Cleaned/Receipts by Port") %>%
+      filter(Location == place) %>%
+      mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+      group_by(Location, Year) %>%
+      summarise(receipts = sum(receipts)) %>%
+      ggplot(aes(x = Year, y = receipts)) +
+      geom_point() +
+      geom_smooth(color = fill_color, fill = fill_color, alpha = 0.5, size = 1) +
+      scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
+      scale_y_continuous(limits = c(0, 4100)) +
+      theme_classic() +
+      theme(axis.title.x = element_blank(),
+            axis.text.x = element_text(margin = margin( 0.2, unit = "cm")),
+            #axis.ticks = element_blank(),
+            axis.title.y = element_blank(),
+            axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
+            axis.ticks.length=unit(-0.1, "cm"),
+            panel.border = element_rect(colour = "black", fill=NA, size=.5),)
+  } else {
+  #plotting axes without labels
+  readRDS("data/Crab Cleaned/Receipts by Port") %>%
+    filter(Location == place) %>%
+    mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+    group_by(Location, Year) %>%
+    summarise(receipts = sum(receipts)) %>%
+    ggplot(aes(x = Year, y = receipts)) +
+      geom_point() +
+      geom_smooth(color = fill_color, fill = fill_color, alpha = 0.5, size = 1) +
+      scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
+    scale_y_continuous(limits = c(0, 4100)) +
+    theme_mine()
+  }
+}
+
+r1 <- mapping_receipts("Morro_Bay", "#0aa1ff", TRUE)
+r2 <- mapping_receipts("Monterey", "#0aa1ff")
+r3 <- mapping_receipts("Halfmoon_Bay", "#0aa1ff")
+#without otters
+r4 <- mapping_receipts("San_Francisco", "#d4000b")
+r5 <- mapping_receipts("Bodega_Bay", "#d4000b")
+r6 <- mapping_receipts("Fort_Bragg", "#d4000b")
+r7 <- mapping_receipts("Eureka", "#d4000b")
+r8 <- mapping_receipts("Trinidad", "#d4000b")
+r9 <- mapping_receipts("Cresent_City", "#d4000b")
+
+grid.arrange(arrangeGrob(ggarrange(r9,r8,r7,r6,r5,r4,r3,r2,r1,
+                                   ncol=1, nrow = 9,
+                                   align="v"),
+                         ncol = 1,
+                         left = "annual offload receipts",
+                         bottom = "year")
+)
+
+rm(list = "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9")
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
 
 #CPUE at Halfmoon Bay, Monterey & Morro Bay vs. Otter population within 100km of the ports
