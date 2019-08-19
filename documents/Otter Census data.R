@@ -415,6 +415,44 @@ grid.arrange(arrangeGrob(ggarrange(r9,r8,r7,r6,r5,r4,r3,r2,r1,
 )
 
 rm(list = "r1", "r2", "r3", "r4", "r5", "r6", "r7", "r8", "r9")
+
+# Figure 2 Proportial CPUE ----------------------------------------------------------
+
+#Sum CPUE by year and port
+proportioned_CPUE <- ungroup(readRDS("data/Crab Cleaned/Effort by Port")) %>%
+  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
+  filter(Location != "Statewide", Effort < 40000) %>%
+  group_by(Year, Location) %>%
+  summarize(Effort = sum(Effort)) %>%
+  mutate(presence = ifelse(Location %in% c("Halfmoon_Bay", "Monterey", "Morro_Bay"), "Otters Present", "Otters Absent"))
+
+#divide a single port's CPUE by the total, statewide CPUE
+proportioned_CPUE$prop_CPUE <- apply(proportioned_CPUE,1, function(x)  as.numeric(x["Effort"])/sum(proportioned_CPUE$Effort[which(proportioned_CPUE$Year == x["Year"])]))
+
+#bar plot proportion of CPUE
+proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+  ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
+  geom_bar(stat = "identity", position = "stack", width = 1, color = "black") +
+  geom_smooth(method = "lm", se = FALSE, color = "black") +
+  scale_x_continuous(expand = c(0,0)) +
+  #scale_y_continuous(limits = c(0,0.40), breaks = c(0.10,0.20,0.30,0.40)) +
+  scale_fill_manual(values = c("Otters Present" = "#0aa1ff","Otters Absent" = "#fc8d62")) +
+  theme_classic() +
+  theme(
+    panel.border = element_rect(colour = "black", fill=NA, size=.3),
+    legend.title=element_blank()) +
+  ylab("proportion of CPUE")
+
+
+#analysis of trendline
+proportioned_CPUE %>%
+  group_by(Year, presence) %>%
+  summarise(prop_CPUE = sum(prop_CPUE)) %>%
+  filter(presence == "Otters Present") %>%
+  summary(lm(prop_CPUE ~ Year, .))
+
 # Pub plot 3: CPUE vs otter pop ---------------------------------------------
 
 #CPUE at Halfmoon Bay, Monterey & Morro Bay vs. Otter population within 100km of the ports
@@ -482,54 +520,6 @@ r_anova <- as.data.frame(do.call(rbind, lapply(c("Trinidad", "Cresent_City", "Eu
 
 summary(aov(r ~ Location, r_anova))
 
-# Figure 2 Proportial CPUE ----------------------------------------------------------
-
-#Sum CPUE by year and port
-proportioned_CPUE <- ungroup(readRDS("data/Crab Cleaned/Effort by Port")) %>%
-  mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-  filter(Location != "Statewide", Effort < 40000) %>%
-  group_by(Year, Location) %>%
-  summarize(Effort = sum(Effort)) %>%
-  mutate(presence = ifelse(Location %in% c("Halfmoon_Bay", "Monterey", "Morro_Bay"), "Otters Present", "Otters Absent"))
-  
-#divide a single port's CPUE by the total, statewide CPUE
-proportioned_CPUE$prop_CPUE <- apply(proportioned_CPUE,1, function(x)  as.numeric(x["Effort"])/sum(proportioned_CPUE$Effort[which(proportioned_CPUE$Year == x["Year"])]))
-
-proportioned_CPUE %>%
-  group_by(Year, presence) %>%
-  summarise(prop_CPUE = sum(prop_CPUE)) %>%
-ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
-  geom_bar(stat = "identity", position = "stack", width = 1, color = "black") +
-  scale_x_continuous(expand = c(0,0)) +
-  scale_y_continuous(expand = c(0,0), breaks = c(0.25,0.50,0.75,1)) +
-  scale_fill_manual(values = c("Otters Present" = "#0aa1ff","Otters Absent" = "#fc8d62")) +
-  theme_classic() +
-  theme(
-    panel.border = element_rect(colour = "black", fill=NA, size=.3),
-    legend.title=element_blank()) +
-  ylab("proportion of CPUE")
-
-#regression line version
-proportioned_CPUE %>%
-  group_by(Year, presence) %>%
-  summarise(prop_CPUE = sum(prop_CPUE)) %>%
-  filter(presence == "Otters Present") %>%
-  ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
-  geom_point(stat = "identity") +
-  geom_smooth(method = "lm", se = FALSE) +
-  scale_x_continuous(expand = c(0,0)) +
-  scale_y_continuous(expand = c(0,0), breaks = c(0.25,0.50,0.75,1)) +
-  theme_classic() +
-  theme(
-    panel.border = element_rect(colour = "black", fill=NA, size=.3),
-    legend.title=element_blank()) +
-  ylab("proportion of fishing success")
-
-proportioned_CPUE %>%
-  group_by(Year, presence) %>%
-  summarise(prop_CPUE = sum(prop_CPUE)) %>%
-  filter(presence == "Otters Present") %>%
-  summary(lm(prop_CPUE ~ Year, .))
 # sandbox ------------------------------------------------------
 
 
