@@ -294,7 +294,8 @@ fig1_normal <- bind_rows(lapply(c("Trinidad", "Cresent_City", "Eureka", "Fort_Br
 fig1_normal <- merge(fig1_normal, fig1_normal %>%
         group_by(Year) %>%
         summarise(fishing_success = mean(normalized_CPUE)), by = "Year") %>%
-  mutate(normal = normalized_CPUE - fishing_success)
+  mutate(normal = normalized_CPUE - fishing_success) %>%
+  mutate(data_type = ifelse(.$normal <0, "below", "above"))
 
 #for all ports
   #set the zero point of the whole plot as the mean for 1985
@@ -310,9 +311,10 @@ normalized <- function(place, fill_color, axes = FALSE){
   if(axes == TRUE){ #for the bottom plot with axis labels
     fig1_normal %>%
       filter(Location == place) %>%
-      ggplot(aes(x = Year, y = normal)) +
-      geom_line(color = "black", size = 1) + #plot line
-      geom_line(aes(x = 1985:2017, y = 0)) + #flat line @ 0
+      ggplot(aes(x = Year, y = normal, fill = data_type)) +
+      #geom_line(color = "black", size = 1) + #plot line
+      geom_bar(stat = "identity", width = 1) +
+      geom_hline(yintercept = 0) + #flat line @ 0
       #geom_smooth(aes(x = Year, y = normal), color = fill_color, fill = fill_color, alpha = 0.5, size = 1) + #loess curve with specific fill color
       scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
       scale_y_continuous(breaks = c(-0.5, 0, 0.50), limits = c(-0.7,0.7)) +
@@ -323,17 +325,20 @@ normalized <- function(place, fill_color, axes = FALSE){
             axis.title.y = element_blank(),
             axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
             axis.ticks.length=unit(-0.1, "cm"),
-            panel.border = element_rect(colour = "black", fill=NA, size=.5),)
+            panel.border = element_rect(colour = "black", fill=NA, size=.5),
+            legend.position = "none")
   } else {
     fig1_normal %>%
       filter(Location == place) %>%
-    ggplot(aes(x = Year, y = normal)) +
-    geom_line(color = "black", size = 1) + #plot line
-    geom_line(aes(x = 1985:2017, y = 0)) + #flat line @ 0
+    ggplot(aes(x = Year, y = normal, fill = data_type)) +
+    #geom_line(color = "black", size = 1) + #plot line
+    geom_bar(stat = "identity", width = 1) +
+    geom_hline(yintercept = 0) + #flat line @ 0
     #geom_smooth(aes(x = Year, y = normal), color = fill_color, fill = fill_color, alpha = 0.5, size = 1) + #loess curve with specific fill color
     scale_x_continuous(expand = c(0,0), breaks = c(1985,1990, 1995, 2000, 2005, 2010, 2015)) +
     scale_y_continuous(breaks = c(-0.5, 0, 0.50), limits = c(-0.7,0.7)) +
-    theme_mine() 
+    theme_mine() +
+      theme(legend.position = "none")
   }
 }
 
