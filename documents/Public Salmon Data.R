@@ -158,6 +158,23 @@ for(i in 3:9){
   print(paste(i, "################################################################################", ""))
   adf.test(norway_prices[,i], nlag = 23)
 }
+
+#CLP Exchange rate --------------------------------------
+
+clp_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/CLPExchangeRate.csv")
+colnames(clp_exchange_rate) <- c("Date", "Rate")
+clp_exchange_rate$Date <- as.Date(clp_exchange_rate$Date, "%d-%b-%y")
+#Chilean exchange rate is by week, so you have to fragment by weeks
+clp_exchange_rate$Date <- cut(clp_exchange_rate$Date, breaks = "week", start.on.monday = TRUE)
+
+#average over each week
+clp_exchange_rate <-  clp_exchange_rate %>%
+  group_by(Date) %>%
+  summarise(Rate = mean(Rate)) %>%
+  mutate(Week = isoweek(Date), #get the week number
+         Year = isoyear(Date)) #get year according to ISO 8601 week calendar
+
+
 #Chile Monthly Imports to US ---------------------------------------------------------------------------------
 
 #Monthly imports of various salmon products to the US
