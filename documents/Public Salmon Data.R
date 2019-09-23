@@ -12,11 +12,19 @@ colnames(dkk_exchange_rate) <- c("Date", "Rate")
 
 #mutate to get a month and a year
 dkk_exchange_rate$Date <- as.Date(dkk_exchange_rate$Date, "%d-%b-%y")
-dkk_exchange_rate <- dkk_exchange_rate[-1,] %>%
-  mutate(Month = as.numeric(month(.$Date)),
-         Year = as.numeric(year(.$Date))) %>%
-  group_by(Month, Year) %>%
-  summarise(Rate = mean(Rate))
+#Chilean exchange rate is by week, so you have to fragment by weeks
+dkk_exchange_rate$Date <- as.Date(cut(dkk_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
+
+#average over each week
+#using ISO 8601 calendar to match weeks in the UB Comtell data
+dkk_exchange_rate <-  dkk_exchange_rate[-1,] %>% #remove the 1st row, which contains the overall average
+  group_by(Date) %>%
+  summarise(Rate = mean(Rate)) %>%
+  mutate(Week = isoweek(Date), #get the week number
+         Year = isoyear(Date)) #get year according to ISO 8601 week calendar
+
+#save R object
+saveRDS(object = dkk_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Faroe_ER")
 
 #Faroe Island Monthly Exports to US ----------------------------------------------------------------------------
 
@@ -115,7 +123,7 @@ nok_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/NOKExchang
 colnames(nok_exchange_rate) <- c("Date", "Rate")
 nok_exchange_rate$Date <- as.Date(nok_exchange_rate$Date, "%d-%b-%y")
 #Norway exchange rate is by week, so you have to fragment by weeks
-nok_exchange_rate$Date <- cut(nok_exchange_rate$Date, breaks = "week", start.on.monday = TRUE)
+nok_exchange_rate$Date <- as.Date(cut(nok_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
 
 #average over each week
 nok_exchange_rate <-  nok_exchange_rate %>%
@@ -126,6 +134,8 @@ nok_exchange_rate <-  nok_exchange_rate %>%
 
   #NOTE: `isoyear` returns the value as a decimal number rather than an integer number (which is what as.numeric would do). This is why the `apply` function used below for the conversion has trouble
 
+#save R object
+saveRDS(object = nok_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Norway_ER")
 
 #Norway weekly prices ----------------------------------------------------------------------------------
 
@@ -165,15 +175,17 @@ clp_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/CLPExchang
 colnames(clp_exchange_rate) <- c("Date", "Rate")
 clp_exchange_rate$Date <- as.Date(clp_exchange_rate$Date, "%d-%b-%y")
 #Chilean exchange rate is by week, so you have to fragment by weeks
-clp_exchange_rate$Date <- cut(clp_exchange_rate$Date, breaks = "week", start.on.monday = TRUE)
+clp_exchange_rate$Date <- as.Date(cut(clp_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
 
 #average over each week
-clp_exchange_rate <-  clp_exchange_rate %>%
+clp_exchange_rate <-  clp_exchange_rate[-1,] %>%
   group_by(Date) %>%
   summarise(Rate = mean(Rate)) %>%
   mutate(Week = isoweek(Date), #get the week number
          Year = isoyear(Date)) #get year according to ISO 8601 week calendar
 
+#save R object
+saveRDS(object = clp_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Chile_ER")
 
 #Chile Monthly Imports to US ---------------------------------------------------------------------------------
 
@@ -195,3 +207,21 @@ chile_product_type$`Product Name` <- chile_product_type$`Product Name` %>%
   gsub("SALMON ATLANTIC FILLET FROZEN", "Atlantic Salmon, Frozen Fillet Unclassified",.) %>%
   gsub("SALMON ATLANTIC MEAT FRESH FARMED", "Atlantic Salmon, Fresh Meat Farmed",.) %>%
   gsub("SALMON ATLANTIC MEAT FRESH WILD", "Atlantic Salmon, Fresh Meat Wild",.)
+
+#CAD Exchange Rate -----------------------------------------------------------
+
+cad_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/CADExchangeRate.csv")
+colnames(cad_exchange_rate) <- c("Date", "Rate")
+cad_exchange_rate$Date <- as.Date(cad_exchange_rate$Date, "%d-%b-%y")
+#Chilean exchange rate is by week, so you have to fragment by weeks
+cad_exchange_rate$Date <- as.Date(cut(cad_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
+
+#average over each week
+cad_exchange_rate <-  cad_exchange_rate[-1,] %>%
+  group_by(Date) %>%
+  summarise(Rate = mean(Rate)) %>%
+  mutate(Week = isoweek(Date), #get the week number
+         Year = isoyear(Date)) #get year according to ISO 8601 week calendar
+
+#save R object
+saveRDS(object = cad_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Canada_ER")
