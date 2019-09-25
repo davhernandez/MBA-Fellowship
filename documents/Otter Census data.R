@@ -439,16 +439,17 @@ proportioned_CPUE %>%
   group_by(Year, presence) %>%
   summarise(prop_CPUE = sum(prop_CPUE)) %>%
   ggplot(aes(x = Year, y = prop_CPUE, fill = presence)) +
-  geom_bar(stat = "identity", position = "stack", width = 1, color = "black") +
+  geom_bar(stat = "identity", position = "stack", width = 1) +
   geom_smooth(method = "lm", se = FALSE, color = "black") +
   scale_x_continuous(expand = c(0,0)) +
-  #scale_y_continuous(limits = c(0,0.40), breaks = c(0.10,0.20,0.30,0.40)) +
+  scale_y_continuous(limits = c(0,0.35), breaks = c(0.10,0.20,0.30,0.40), expand = c(0,0)) +
   scale_fill_manual(values = c("Otters Present" = "#0aa1ff","Otters Absent" = "#fc8d62")) +
   theme_classic() +
   theme(
     panel.border = element_rect(colour = "black", fill=NA, size=.3),
-    legend.title=element_blank()) +
-  ylab("proportion of CPUE")
+    legend.position = "none") + #remove legend entirely
+  ylab("proportion of CPUE") +
+  xlab("year")
 
 
 #analysis of trendline
@@ -465,14 +466,12 @@ proportioned_CPUE %>%
 
 #this plot is done in `Pub plot 3.R`` since the buffering process is a long script
 
-#Pub plot 4: Timeline of mgmt changes ---------------------------------------------
-
 #Pub plot 5: Inherent growth rate ----------------------------------------------
 growth_rate <-function(site_name){
   scratch <- readRDS("data/Crab Cleaned/Effort by Port") %>%
     mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
   #filter the site
-    filter(Location == site_name) %>%
+    filter(Location == site_name, Effort < 60000) %>%
     group_by(Year, Location) %>%
     summarise(CPUE = log(sum(Effort))) %>% #careful about this. Kyle asked for a log transform. see pg 117 of notebook
     mutate(r = NA)
