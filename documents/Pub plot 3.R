@@ -111,14 +111,14 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
   default_plot <- function(site){
     readRDS("data/Crab Cleaned/Effort by Port") %>%
       mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-      filter(Year <= 2014, Year >= 1985, Location == site, Effort < 40000) %>%
+      dplyr::filter(Year <= 2014, Year >= 1985, Location == site, Effort < 40000) %>%
       group_by(Year) %>%
       summarise(CPUE = mean(Effort) * 0.0004535924) %>%
       mutate(Location = "Monterey") %>%
       merge(.,buffered_monterey, by = "Year") %>%
       ggplot(aes(x = Otters, y = CPUE)) +
-      geom_point(color = "#0aa1ff") +
-      geom_smooth(method = 'lm', color = "black") +
+      geom_smooth(method = 'lm', color = "#0aa1ff", fill = "#9dd9ff", alpha = 1) +
+      geom_point(color = "#0aa1ff", size = 2.5) +
       theme_classic() +
       theme(axis.title.x = element_blank(),
             axis.title.y = element_blank(),
@@ -126,8 +126,8 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
             axis.text.y = element_blank(),
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
-      coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
-    #coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
+      #coord_cartesian(xlim = x_scale, ylim = c(0, 0.5)) #use for stable axis
+    coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
   }
   
   #make the plots
@@ -140,14 +140,14 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
     #plot with axis labels
     output[[3]] <-     readRDS("data/Crab Cleaned/Effort by Port") %>%
       mutate(Year = as.numeric(format(.$Date, "%Y"))) %>%
-      filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay", Effort < 40000) %>%
+      dplyr::filter(Year <= 2014, Year >= 1985, Location == "Morro_Bay", Effort < 40000) %>%
       group_by(Year) %>%
       summarise(CPUE = mean(Effort) * 0.0004535924) %>%
       mutate(Location = "Morro_Bay") %>%
       merge(.,buffered_monterey, by = "Year") %>%
       ggplot(aes(x = Otters, y = CPUE)) +
-      geom_point(color = "#0aa1ff") +
-      geom_smooth(method = 'lm', color = "black") +
+      geom_smooth(method = 'lm', color = "#0aa1ff", fill = "#9dd9ff", alpha = 1) +
+      geom_point(color = "#0aa1ff", size = 2.5) +
       ylab("metric tons per offload receipt") +
       xlab("otter population size") +
       theme_classic() +
@@ -157,8 +157,8 @@ buffer_plots_function <- function(buffer_range, axes = FALSE, x_scale = c(0,3000
             axis.text.y = element_text(margin = margin(c(1, 0.2), unit = "cm")),
             axis.ticks.length=unit(-0.1, "cm"),
             panel.border = element_rect(colour = "black", fill=NA, size=.5)) +
-      coord_cartesian(xlim = x_scale, ylim = c(0, 0.5))
-    #coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
+      #coord_cartesian(xlim = x_scale, ylim = c(0, 0.5)) #use for stable axis
+    coord_cartesian(ylim = c(0, 0.5)) #use for floating x-axis
     
     
   }
@@ -175,7 +175,7 @@ ggarrange(fig_3[[1]], fig_3[[2]], fig_3[[3]],
 
 #Supplimental 1
 buffers_axis <- buffer_plots_function(buffer_range = 20, axes = TRUE)
-buffers <- lapply(c(50,100,150,200), buffer_plots_function)
+buffers <- lapply(c(50,100,150,200), buffer_plots_function, axes = TRUE)
 
 
 #build composite plot
@@ -184,3 +184,4 @@ ggarrange(buffers_axis[[1]], buffers[[1]][[1]], buffers[[2]][[1]], buffers[[3]][
           buffers_axis[[3]], buffers[[1]][[3]], buffers[[2]][[3]], buffers[[3]][[3]], buffers[[4]][[3]],
           ncol = 5, nrow = 3,
           align = "hv") #aling both `h` and `v`
+
