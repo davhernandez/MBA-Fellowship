@@ -187,7 +187,11 @@ clp_exchange_rate <-  clp_exchange_rate[-1,] %>%
 #save R object
 saveRDS(object = clp_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Chile_ER")
 
+#
+
 #Chile Monthly Imports to US ---------------------------------------------------------------------------------
+
+#this was an attempt to explore the publicly available import/export data, but was never finished
 
 #Monthly imports of various salmon products to the US
   #based on US Census data
@@ -213,7 +217,7 @@ chile_product_type$`Product Name` <- chile_product_type$`Product Name` %>%
 cad_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/CADExchangeRate.csv")
 colnames(cad_exchange_rate) <- c("Date", "Rate")
 cad_exchange_rate$Date <- as.Date(cad_exchange_rate$Date, "%d-%b-%y")
-#Chilean exchange rate is by week, so you have to fragment by weeks
+#Canadian exchange rate is by week, so you have to fragment by weeks
 cad_exchange_rate$Date <- as.Date(cut(cad_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
 
 #average over each week
@@ -225,3 +229,21 @@ cad_exchange_rate <-  cad_exchange_rate[-1,] %>%
 
 #save R object
 saveRDS(object = cad_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Canada_ER")
+
+#GBP Exchange Rate -------------------------------------------------------------
+
+gbp_exchange_rate <- read.csv("data/Salmon public data/Exchange Rates/GBPExchangeRate.csv")
+colnames(gbp_exchange_rate) <- c("Date", "Rate")
+gbp_exchange_rate$Date <- as.Date(gbp_exchange_rate$Date, "%d-%b-%y")
+#Great British Pound exchange rate is by week, so you have to fragment by weeks
+gbp_exchange_rate$Date <- as.Date(cut(gbp_exchange_rate$Date, breaks = "week", start.on.monday = TRUE))
+
+#average over each week
+gbp_exchange_rate <-  gbp_exchange_rate %>%
+  group_by(Date) %>%
+  summarise(Rate = mean(Rate)) %>%
+  mutate(Week = isoweek(Date), #get the week number
+         Year = isoyear(Date)) #get year according to ISO 8601 week calendar
+
+#save R object
+saveRDS(object = gbp_exchange_rate,file = "data/Salmon public data/Exchange Rates/Cleaned/Scotland_ER")
